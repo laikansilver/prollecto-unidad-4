@@ -1,0 +1,35 @@
+Inicio pagina
+
+titulo "🛒 Sistema de Inventario de Productos"
+
+texto "Sistema completo de gestión de inventario. Controla tu stock, precios y categorías de productos."
+
+linea doble
+
+crud inicio
+    bdd TiendaDB
+    tabla Productos
+        campo id:INT
+        campo nombre:VARCHAR
+        campo descripcion:TEXT
+        campo precio:DECIMAL
+        campo stock:INT
+        campo categoria:VARCHAR
+        campo fecha_ingreso:DATE
+    fintabla
+crud fin
+
+linea simple
+
+texto "💡 CARACTERÍSTICAS DEL SISTEMA:"
+texto "✅ Gestión completa de productos"
+texto "✅ Control de inventario en tiempo real"
+texto "✅ Registro de precios y categorías"
+texto "✅ Historial de movimientos"
+
+seccion acercade
+    domicilio:"Av. Comercial #123, Morelia, Michoacán"
+    telefono:"443-123-4567"
+    email:"ventas@mitienda.com"
+
+fin pagina

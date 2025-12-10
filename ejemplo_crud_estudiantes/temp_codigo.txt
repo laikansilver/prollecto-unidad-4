@@ -1,0 +1,29 @@
+Inicio pagina
+
+titulo "🎓 Sistema de Gestión Escolar"
+
+texto "Bienvenido al sistema de gestión de estudiantes. Aquí puedes administrar la información de todos los estudiantes de manera sencilla y eficiente."
+
+linea simple
+
+crud inicio
+    bdd EscuelaDB
+    tabla Estudiantes
+        campo id:INT
+        campo nombre:VARCHAR
+        campo apellido:VARCHAR
+        campo edad:INT
+        campo correo:VARCHAR
+        campo carrera:VARCHAR
+        campo semestre:INT
+    fintabla
+crud fin
+
+linea simple
+
+seccion acercade
+    domicilio:"Instituto Tecnológico de Morelia, Av. Tecnológico 1500"
+    telefono:"443-312-1570"
+    email:"contacto@itmorelia.edu.mx"
+
+fin pagina

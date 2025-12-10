@@ -1,0 +1,14 @@
+=== ESPECIFICACIÓN CRUD ===
+
+Base de Datos: Empresa
+Tabla: Productos
+Campos:
+  - Nombre
+  - Precio
+  - Clave
+
+Operaciones requeridas:
+  - CREATE (Insertar)
+  - READ (Consultar)
+  - UPDATE (Actualizar)
+  - DELETE (Eliminar)

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Generada</title>
+    <link rel="stylesheet" href="prueba_productos.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Sistema de Productos</h1>
+        <div class="texto">
+            <p>Gestión de inventario de productos</p>
+        </div>
+        <hr>
+        <div class="crud-section">
+            <h2>📊 Sistema de Gestión de Base de Datos</h2>
+            <div class="mensaje mensaje-exito" style="background: #d4edda; padding: 15px; margin: 10px 0; border-radius: 5px;">
+                <strong>✅ Sistema Híbrido Activo:</strong> Los datos se guardan automáticamente en tu navegador (LocalStorage). 
+                Funciona sin necesidad de servidor. También se genera código PHP/MySQL para implementación real.
+            </div>
+            <p><strong>Base de Datos:</strong> InventarioDB</p>
+            <h3>Tabla: Productos</h3>
+            <div class="crud-section">
+                <h3>➕ Agregar/Editar Registro</h3>
+                <form id="crudForm" class="crud-form">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" required>
+                    <label for="precio">Precio:</label>
+                    <input type="number" id="precio" name="precio" step="0.01" required>
+                    <label for="stock">Stock:</label>
+                    <input type="number" id="stock" name="stock" step="1" required>
+                    <div style="margin-top: 15px;">
+                        <button type="submit" id="btnGuardar" class="btn btn-success">💾 Guardar</button>
+                        <button type="button" id="btnCancelar" class="btn btn-warning" onclick="limpiarFormulario()" style="display: none;">❌ Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="crud-section">
+                <h3>📋 Registros Guardados</h3>
+                <p><strong>Total de registros:</strong> <span id="totalRegistros">0</span></p>
+                <table class="crud-table">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaRegistros">
+                        <tr><td colspan="5" style="text-align: center;">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <script>
+// ===== SISTEMA CRUD CON LOCALSTORAGE =====
+// Funciona sin servidor - Los datos se guardan en el navegador
+
+const STORAGE_KEY = 'Productos_data';
+let registros = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+let editandoId = null;
+
+function guardarEnLocalStorage() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
+}
+
+function agregarRegistro() {
+    const nuevo = {
+        id: Date.now(),
+        nombre: document.getElementById('nombre').value,
+        precio: document.getElementById('precio').value,
+        stock: document.getElementById('stock').value,
+    };
+    registros.push(nuevo);
+    guardarEnLocalStorage();
+    mostrarRegistros();
+    limpiarFormulario();
+    mostrarMensaje('Registro agregado exitosamente', 'exito');
+}
+
+function actualizarRegistro() {
+    const index = registros.findIndex(r => r.id === editandoId);
+    if (index !== -1) {
+        registros[index].nombre = document.getElementById('nombre').value;
+        registros[index].precio = document.getElementById('precio').value;
+        registros[index].stock = document.getElementById('stock').value;
+        guardarEnLocalStorage();
+        mostrarRegistros();
+        limpiarFormulario();
+        mostrarMensaje('Registro actualizado exitosamente', 'exito');
+    }
+}
+
+function eliminarRegistro(id) {
+    if (confirm('¿Estás seguro de eliminar este registro?')) {
+        registros = registros.filter(r => r.id !== id);
+        guardarEnLocalStorage();
+        mostrarRegistros();
+        mostrarMensaje('Registro eliminado exitosamente', 'exito');
+    }
+}
+
+function editarRegistro(id) {
+    const registro = registros.find(r => r.id === id);
+    if (registro) {
+        editandoId = id;
+        document.getElementById('nombre').value = registro.nombre;
+        document.getElementById('precio').value = registro.precio;
+        document.getElementById('stock').value = registro.stock;
+        document.getElementById('btnGuardar').textContent = 'Actualizar';
+        document.getElementById('btnCancelar').style.display = 'inline-block';
+    }
+}
+
+function mostrarRegistros() {
+    const tbody = document.getElementById('tablaRegistros');
+    tbody.innerHTML = '';
+    
+    if (registros.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay registros</td></tr>';
+        return;
+    }
+    
+    registros.forEach(reg => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${reg.id}</td>
+            <td>${reg.nombre}</td>
+            <td>${reg.precio}</td>
+            <td>${reg.stock}</td>
+            <td>
+                <button onclick="editarRegistro(${reg.id})" class="btn btn-warning">Editar</button>
+                <button onclick="eliminarRegistro(${reg.id})" class="btn btn-danger">Eliminar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    
+    document.getElementById('totalRegistros').textContent = registros.length;
+}
+
+function limpiarFormulario() {
+    document.getElementById('nombre').value = '';
+    document.getElementById('precio').value = '';
+    document.getElementById('stock').value = '';
+    editandoId = null;
+    document.getElementById('btnGuardar').textContent = 'Guardar';
+    document.getElementById('btnCancelar').style.display = 'none';
+}
+
+function mostrarMensaje(texto, tipo) {
+    const div = document.createElement('div');
+    div.className = 'mensaje mensaje-' + tipo;
+    div.textContent = texto;
+    document.querySelector('.container').insertBefore(div, document.querySelector('.crud-section'));
+    setTimeout(() => div.remove(), 3000);
+}
+
+function procesarFormulario(e) {
+    e.preventDefault();
+    if (editandoId) {
+        actualizarRegistro();
+    } else {
+        agregarRegistro();
+    }
+}
+
+// Inicializar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    mostrarRegistros();
+    document.getElementById('crudForm').addEventListener('submit', procesarFormulario);
+});
+        </script>
+        <hr>
+        <div class="acercade">
+            <h2>Acerca de</h2>
+            <p><strong>Domicilio:</strong> Tienda Example</p>
+            <p><strong>Teléfono:</strong> 443-123-4567</p>
+            <p><strong>Email:</strong> ventas@example.com</p>
+        </div>
+    </div>
+</body>
+</html>

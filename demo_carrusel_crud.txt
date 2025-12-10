@@ -1,0 +1,17 @@
+=== ESPECIFICACIÓN CRUD ===
+
+Base de Datos: Catalogo
+Tabla: Promociones
+Campos:
+  - Titulo
+  - Descripcion
+  - Precio
+  - Descuento
+  - FechaInicio
+  - FechaFin
+
+Operaciones requeridas:
+  - CREATE (Insertar)
+  - READ (Consultar)
+  - UPDATE (Actualizar)
+  - DELETE (Eliminar)

@@ -1,0 +1,15 @@
+=== ESPECIFICACIÓN CRUD ===
+
+Base de Datos: MuseoCochesClasicos
+Tabla: Mustangs
+Campos:
+  - Modelo
+  - Anio
+  - Pelicula
+  - Estado
+
+Operaciones requeridas:
+  - CREATE (Insertar)
+  - READ (Consultar)
+  - UPDATE (Actualizar)
+  - DELETE (Eliminar)

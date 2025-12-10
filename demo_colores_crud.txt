@@ -1,0 +1,16 @@
+=== ESPECIFICACIÓN CRUD ===
+
+Base de Datos: sistema_escolar
+Tabla: Estudiantes
+Campos:
+  - matricula
+  - nombre_completo
+  - correo
+  - carrera
+  - promedio
+
+Operaciones requeridas:
+  - CREATE (Insertar)
+  - READ (Consultar)
+  - UPDATE (Actualizar)
+  - DELETE (Eliminar)

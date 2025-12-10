@@ -1,0 +1,815 @@
+grammar WebPageLanguage;
+
+@header {
+    import java.io.*;
+    import java.util.List;
+    import java.util.ArrayList;
+}
+
+@members {
+    // Variables para generar HTML y CSS
+    StringBuilder html = new StringBuilder();
+    StringBuilder css = new StringBuilder();
+    StringBuilder crudSpec = new StringBuilder();
+    StringBuilder pythonCode = new StringBuilder();
+    String currentDatabase = "";
+    String currentTable = "";
+    List<String> campos = new ArrayList<String>();
+    String tituloActual = "Mi Página";
+    
+    // Método para obtener el HTML generado
+    public String getHTML() {
+        return html.toString();
+    }
+    
+    // Método para obtener el CSS generado
+    public String getCSS() {
+        return css.toString();
+    }
+    
+    // Método para obtener la especificación CRUD
+    public String getCRUDSpec() {
+        return crudSpec.toString();
+    }
+    
+    // Método para obtener el código Python generado
+    public String getPythonCode() {
+        return pythonCode.toString();
+    }
+    
+    // Método para generar el servidor Python con Flask
+    private void generarPythonServer() {
+        pythonCode.append("#!/usr/bin/env python3\n");
+        pythonCode.append("# -*- coding: utf-8 -*-\n");
+        pythonCode.append("\"\"\"Servidor Flask para gestión CRUD de Base de Datos\"\"\"\n\n");
+        pythonCode.append("from flask import Flask, request, jsonify\n");
+        pythonCode.append("from flask_cors import CORS\n");
+        pythonCode.append("import sqlite3\n");
+        pythonCode.append("import json\n");
+        pythonCode.append("from datetime import datetime\n\n");
+        pythonCode.append("app = Flask(__name__)\n");
+        pythonCode.append("CORS(app)  # Permite peticiones desde cualquier origen\n\n");
+        pythonCode.append("# Configuración de la base de datos\n");
+    }
+    
+    // Método para generar interfaz CRUD en HTML
+    private void generarInterfazCRUD() {
+        html.append(\"            <div class=\\\"crud-container\\\">\\n\");
+        html.append(\"                <!-- Botones de acción -->\\n\");
+        html.append(\"                <div class=\\\"crud-buttons\\\">\\n\");
+        html.append(\"                    <button onclick=\\\"mostrarFormulario('crear')\\\" class=\\\"btn btn-crear\\\">+ Crear Registro</button>\\n\");
+        html.append(\"                    <button onclick=\\\"cargarDatos()\\\" class=\\\"btn btn-refrescar\\\">↻ Refrescar</button>\\n\");
+        html.append(\"                </div>\\n\\n\");
+        
+        // Formulario para crear/editar
+        html.append(\"                <!-- Formulario CRUD -->\\n\");
+        html.append(\"                <div id=\\\"formulario-crud\\\" class=\\\"formulario-crud\\\" style=\\\"display:none;\\\">\\n\");
+        html.append(\"                    <h3 id=\\\"titulo-formulario\\\">Crear Nuevo Registro</h3>\\n\");
+        html.append(\"                    <form id=\\\"form-crud\\\" onsubmit=\\\"guardarRegistro(event)\\\">\\n\");
+        html.append(\"                        <input type=\\\"hidden\\\" id=\\\"registro-id\\\" value=\\\"\\\">\\n\");
+        
+        for (String campo : campos) {
+            html.append(\"                        <div class=\\\"form-group\\\">\\n\");
+            html.append(\"                            <label for=\\\"\" + campo + \"\\\">\" + campo + \":</label>\\n\");
+            html.append(\"                            <input type=\\\"text\\\" id=\\\"\" + campo + \"\\\" name=\\\"\" + campo + \"\\\" required>\\n\");
+            html.append(\"                        </div>\\n\");
+        }
+        
+        html.append(\"                        <div class=\\\"form-actions\\\">\\n\");
+        html.append(\"                            <button type=\\\"submit\\\" class=\\\"btn btn-guardar\\\">Guardar</button>\\n\");
+        html.append(\"                            <button type=\\\"button\\\" onclick=\\\"cerrarFormulario()\\\" class=\\\"btn btn-cancelar\\\">Cancelar</button>\\n\");
+        html.append(\"                        </div>\\n\");
+        html.append(\"                    </form>\\n\");
+        html.append(\"                </div>\\n\\n\");
+        
+        // Tabla de datos
+        html.append(\"                <!-- Tabla de registros -->\\n\");
+        html.append(\"                <div class=\\\"tabla-container\\\">\\n\");
+        html.append(\"                    <table id=\\\"tabla-datos\\\" class=\\\"tabla-crud\\\">\\n\");
+        html.append(\"                        <thead>\\n\");
+        html.append(\"                            <tr>\\n\");
+        html.append(\"                                <th>ID</th>\\n\");
+        for (String campo : campos) {
+            html.append(\"                                <th>\" + campo + \"</th>\\n\");
+        }
+        html.append(\"                                <th>Acciones</th>\\n\");
+        html.append(\"                            </tr>\\n\");
+        html.append(\"                        </thead>\\n\");
+        html.append(\"                        <tbody id=\\\"tbody-datos\\\">\\n\");
+        html.append(\"                            <tr><td colspan=\\\"\" + (campos.size() + 2) + \"\\\">Cargando datos...</td></tr>\\n\");
+        html.append(\"                        </tbody>\\n\");
+        html.append(\"                    </table>\\n\");
+        html.append(\"                </div>\\n\");
+        html.append(\"            </div>\\n\");
+    }
+    
+    // Método para agregar scripts JavaScript
+    private void agregarScriptsJS() {
+        html.append(\"\\n    <script>\\n\");
+        html.append(\"        const API_URL = 'http://localhost:5000';\\n\\n\");
+        
+        html.append(\"        // Cargar datos al iniciar\\n\");
+        html.append(\"        document.addEventListener('DOMContentLoaded', cargarDatos);\\n\\n\");
+        
+        html.append(\"        function cargarDatos() {\\n\");
+        html.append(\"            fetch(API_URL + '/api/registros')\\n\");
+        html.append(\"                .then(response => response.json())\\n\");
+        html.append(\"                .then(data => {\\n\");
+        html.append(\"                    const tbody = document.getElementById('tbody-datos');\\n\");
+        html.append(\"                    if (data.registros.length === 0) {\\n\");
+        html.append(\"                        tbody.innerHTML = '<tr><td colspan=\\\"\" + (campos.size() + 2) + \"\\\">No hay registros</td></tr>';\\n\");
+        html.append(\"                        return;\\n\");
+        html.append(\"                    }\\n\");
+        html.append(\"                    tbody.innerHTML = '';\\n\");
+        html.append(\"                    data.registros.forEach(registro => {\\n\");
+        html.append(\"                        const tr = document.createElement('tr');\\n\");
+        html.append(\"                        tr.innerHTML = `\\n\");
+        html.append(\"                            <td>${registro.id}</td>\\n\");
+        for (String campo : campos) {
+            html.append(\"                            <td>${registro.\" + campo + \"}</td>\\n\");
+        }
+        html.append(\"                            <td>\\n\");
+        html.append(\"                                <button onclick=\\\"editarRegistro(${registro.id})\\\" class=\\\"btn-editar\\\">✎ Editar</button>\\n\");
+        html.append(\"                                <button onclick=\\\"eliminarRegistro(${registro.id})\\\" class=\\\"btn-eliminar\\\">🗑 Eliminar</button>\\n\");
+        html.append(\"                            </td>\\n\");
+        html.append(\"                        `;\\n\");
+        html.append(\"                        tbody.appendChild(tr);\\n\");
+        html.append(\"                    });\\n\");
+        html.append(\"                })\\n\");
+        html.append(\"                .catch(error => {\\n\");
+        html.append(\"                    console.error('Error:', error);\\n\");
+        html.append(\"                    alert('Error al cargar datos. Asegúrate de que el servidor Python esté ejecutándose.');\\n\");
+        html.append(\"                });\\n\");
+        html.append(\"        }\\n\\n\");
+        
+        html.append(\"        function mostrarFormulario(modo) {\\n\");
+        html.append(\"            document.getElementById('formulario-crud').style.display = 'block';\\n\");
+        html.append(\"            document.getElementById('titulo-formulario').textContent = modo === 'crear' ? 'Crear Nuevo Registro' : 'Editar Registro';\\n\");
+        html.append(\"            if (modo === 'crear') {\\n\");
+        html.append(\"                document.getElementById('form-crud').reset();\\n\");
+        html.append(\"                document.getElementById('registro-id').value = '';\\n\");
+        html.append(\"            }\\n\");
+        html.append(\"        }\\n\\n\");
+        
+        html.append(\"        function cerrarFormulario() {\\n\");
+        html.append(\"            document.getElementById('formulario-crud').style.display = 'none';\\n\");
+        html.append(\"        }\\n\\n\");
+        
+        html.append(\"        function guardarRegistro(event) {\\n\");
+        html.append(\"            event.preventDefault();\\n\");
+        html.append(\"            const id = document.getElementById('registro-id').value;\\n\");
+        html.append(\"            const datos = {\\n\");
+        for (int i = 0; i < campos.size(); i++) {
+            html.append(\"                \" + campos.get(i) + \": document.getElementById('\" + campos.get(i) + \"').value\");
+            if (i < campos.size() - 1) html.append(\",\\n\");
+        }
+        html.append(\"\\n            };\\n\\n\");
+        
+        html.append(\"            const url = id ? `${API_URL}/api/registros/${id}` : `${API_URL}/api/registros`;\\n\");
+        html.append(\"            const method = id ? 'PUT' : 'POST';\\n\\n\");
+        
+        html.append(\"            fetch(url, {\\n\");
+        html.append(\"                method: method,\\n\");
+        html.append(\"                headers: { 'Content-Type': 'application/json' },\\n\");
+        html.append(\"                body: JSON.stringify(datos)\\n\");
+        html.append(\"            })\\n\");
+        html.append(\"            .then(response => response.json())\\n\");
+        html.append(\"            .then(data => {\\n\");
+        html.append(\"                alert(data.mensaje);\\n\");
+        html.append(\"                cerrarFormulario();\\n\");
+        html.append(\"                cargarDatos();\\n\");
+        html.append(\"            })\\n\");
+        html.append(\"            .catch(error => {\\n\");
+        html.append(\"                console.error('Error:', error);\\n\");
+        html.append(\"                alert('Error al guardar. Verifica el servidor.');\\n\");
+        html.append(\"            });\\n\");
+        html.append(\"        }\\n\\n\");
+        
+        html.append(\"        function editarRegistro(id) {\\n\");
+        html.append(\"            fetch(`${API_URL}/api/registros/${id}`)\\n\");
+        html.append(\"                .then(response => response.json())\\n\");
+        html.append(\"                .then(data => {\\n\");
+        html.append(\"                    mostrarFormulario('editar');\\n\");
+        html.append(\"                    document.getElementById('registro-id').value = data.id;\\n\");
+        for (String campo : campos) {
+            html.append(\"                    document.getElementById('\" + campo + \"').value = data.\" + campo + \";\\n\");
+        }
+        html.append(\"                })\\n\");
+        html.append(\"                .catch(error => console.error('Error:', error));\\n\");
+        html.append(\"        }\\n\\n\");
+        
+        html.append(\"        function eliminarRegistro(id) {\\n\");
+        html.append(\"            if (!confirm('¿Estás seguro de eliminar este registro?')) return;\\n\\n\");
+        html.append(\"            fetch(`${API_URL}/api/registros/${id}`, { method: 'DELETE' })\\n\");
+        html.append(\"                .then(response => response.json())\\n\");
+        html.append(\"                .then(data => {\\n\");
+        html.append(\"                    alert(data.mensaje);\\n\");
+        html.append(\"                    cargarDatos();\\n\");
+        html.append(\"                })\\n\");
+        html.append("                .catch(error => console.error('Error:', error));\n");
+        html.append("        }\n");
+        html.append("    </script>\n");
+    }
+    
+    // Método para finalizar la generación del servidor Python
+    private void finalizarPythonServer() {
+        pythonCode.append("DB_NAME = '" + currentDatabase + ".db'\n\n");
+        pythonCode.append("def get_db_connection():\n");
+        pythonCode.append("    \"\"\"Obtiene conexión a la base de datos\"\"\"\n");
+        pythonCode.append("    conn = sqlite3.connect(DB_NAME)\n");
+        pythonCode.append("    conn.row_factory = sqlite3.Row\n");
+        pythonCode.append("    return conn\n\n");
+        
+        pythonCode.append("def init_db():\n");
+        pythonCode.append("    \"\"\"Inicializa la base de datos y crea la tabla\"\"\"\n");
+        pythonCode.append("    conn = get_db_connection()\n");
+        pythonCode.append("    cursor = conn.cursor()\n");
+        pythonCode.append("    cursor.execute('''CREATE TABLE IF NOT EXISTS " + currentTable + " (\n");
+        pythonCode.append("        id INTEGER PRIMARY KEY AUTOINCREMENT");
+        for (String campo : campos) {
+            pythonCode.append(",\n        " + campo + " TEXT");
+        }
+        pythonCode.append("\n    )''')\n");
+        pythonCode.append("    conn.commit()\n");
+        pythonCode.append("    conn.close()\n");
+        pythonCode.append("    print(f'Base de datos inicializada: {DB_NAME}')\n\n");
+        
+        // Endpoints de la API
+        pythonCode.append("# ========== ENDPOINTS API ==========\n\n");
+        
+        // GET todos los registros
+        pythonCode.append("@app.route('/api/registros', methods=['GET'])\n");
+        pythonCode.append("def get_registros():\n");
+        pythonCode.append("    \"\"\"Obtiene todos los registros\"\"\"\n");
+        pythonCode.append("    try:\n");
+        pythonCode.append("        conn = get_db_connection()\n");
+        pythonCode.append("        cursor = conn.cursor()\n");
+        pythonCode.append("        cursor.execute('SELECT * FROM " + currentTable + "')\n");
+        pythonCode.append("        registros = [dict(row) for row in cursor.fetchall()]\n");
+        pythonCode.append("        conn.close()\n");
+        pythonCode.append("        return jsonify({'registros': registros}), 200\n");
+        pythonCode.append("    except Exception as e:\n");
+        pythonCode.append("        return jsonify({'error': str(e)}), 500\n\n");
+        
+        // GET un registro por ID
+        pythonCode.append("@app.route('/api/registros/<int:id>', methods=['GET'])\n");
+        pythonCode.append("def get_registro(id):\n");
+        pythonCode.append("    \"\"\"Obtiene un registro específico\"\"\"\n");
+        pythonCode.append("    try:\n");
+        pythonCode.append("        conn = get_db_connection()\n");
+        pythonCode.append("        cursor = conn.cursor()\n");
+        pythonCode.append("        cursor.execute('SELECT * FROM " + currentTable + " WHERE id = ?', (id,))\n");
+        pythonCode.append("        registro = cursor.fetchone()\n");
+        pythonCode.append("        conn.close()\n");
+        pythonCode.append("        if registro:\n");
+        pythonCode.append("            return jsonify(dict(registro)), 200\n");
+        pythonCode.append("        return jsonify({'error': 'Registro no encontrado'}), 404\n");
+        pythonCode.append("    except Exception as e:\n");
+        pythonCode.append("        return jsonify({'error': str(e)}), 500\n\n");
+        
+        // POST crear registro
+        pythonCode.append("@app.route('/api/registros', methods=['POST'])\n");
+        pythonCode.append("def crear_registro():\n");
+        pythonCode.append("    \"\"\"Crea un nuevo registro\"\"\"\n");
+        pythonCode.append("    try:\n");
+        pythonCode.append("        data = request.json\n");
+        
+        // Construir query INSERT
+        StringBuilder camposStr = new StringBuilder();
+        StringBuilder valoresStr = new StringBuilder();
+        for (int i = 0; i < campos.size(); i++) {
+            camposStr.append(campos.get(i));
+            valoresStr.append("?");
+            if (i < campos.size() - 1) {
+                camposStr.append(", ");
+                valoresStr.append(", ");
+            }
+        }
+        
+        pythonCode.append("        conn = get_db_connection()\n");
+        pythonCode.append("        cursor = conn.cursor()\n");
+        pythonCode.append("        cursor.execute(\n");
+        pythonCode.append("            'INSERT INTO " + currentTable + " (" + camposStr + ") VALUES (" + valoresStr + ")',\n");
+        pythonCode.append("            (");
+        for (int i = 0; i < campos.size(); i++) {
+            pythonCode.append("data.get('" + campos.get(i) + "')");
+            if (i < campos.size() - 1) pythonCode.append(", ");
+        }
+        pythonCode.append(")\n");
+        pythonCode.append("        )\n");
+        pythonCode.append("        conn.commit()\n");
+        pythonCode.append("        nuevo_id = cursor.lastrowid\n");
+        pythonCode.append("        conn.close()\n");
+        pythonCode.append("        return jsonify({'mensaje': 'Registro creado exitosamente', 'id': nuevo_id}), 201\n");
+        pythonCode.append("    except Exception as e:\n");
+        pythonCode.append("        return jsonify({'error': str(e)}), 500\n\n");
+        
+        // PUT actualizar registro
+        pythonCode.append("@app.route('/api/registros/<int:id>', methods=['PUT'])\n");
+        pythonCode.append("def actualizar_registro(id):\n");
+        pythonCode.append("    \"\"\"Actualiza un registro existente\"\"\"\n");
+        pythonCode.append("    try:\n");
+        pythonCode.append("        data = request.json\n");
+        pythonCode.append("        conn = get_db_connection()\n");
+        pythonCode.append("        cursor = conn.cursor()\n");
+        
+        StringBuilder setClause = new StringBuilder();
+        for (int i = 0; i < campos.size(); i++) {
+            setClause.append(campos.get(i) + " = ?");
+            if (i < campos.size() - 1) setClause.append(", ");
+        }
+        
+        pythonCode.append("        cursor.execute(\n");
+        pythonCode.append("            'UPDATE " + currentTable + " SET " + setClause + " WHERE id = ?',\n");
+        pythonCode.append("            (");
+        for (int i = 0; i < campos.size(); i++) {
+            pythonCode.append("data.get('" + campos.get(i) + "')");
+            pythonCode.append(", ");
+        }
+        pythonCode.append("id)\n");
+        pythonCode.append("        )\n");
+        pythonCode.append("        conn.commit()\n");
+        pythonCode.append("        conn.close()\n");
+        pythonCode.append("        return jsonify({'mensaje': 'Registro actualizado exitosamente'}), 200\n");
+        pythonCode.append("    except Exception as e:\n");
+        pythonCode.append("        return jsonify({'error': str(e)}), 500\n\n");
+        
+        // DELETE eliminar registro
+        pythonCode.append("@app.route('/api/registros/<int:id>', methods=['DELETE'])\n");
+        pythonCode.append("def eliminar_registro(id):\n");
+        pythonCode.append("    \"\"\"Elimina un registro\"\"\"\n");
+        pythonCode.append("    try:\n");
+        pythonCode.append("        conn = get_db_connection()\n");
+        pythonCode.append("        cursor = conn.cursor()\n");
+        pythonCode.append("        cursor.execute('DELETE FROM " + currentTable + " WHERE id = ?', (id,))\n");
+        pythonCode.append("        conn.commit()\n");
+        pythonCode.append("        conn.close()\n");
+        pythonCode.append("        return jsonify({'mensaje': 'Registro eliminado exitosamente'}), 200\n");
+        pythonCode.append("    except Exception as e:\n");
+        pythonCode.append("        return jsonify({'error': str(e)}), 500\n\n");
+        
+        // Iniciar servidor
+        pythonCode.append("if __name__ == '__main__':\n");
+        pythonCode.append("    print('\\n' + '='*50)\n");
+        pythonCode.append("    print(' SERVIDOR CRUD - " + tituloActual + "')\n");
+        pythonCode.append("    print('='*50)\n");
+        pythonCode.append("    print(f'Base de datos: {DB_NAME}')\n");
+        pythonCode.append("    print(f'Tabla: " + currentTable + "')\n");
+        pythonCode.append("    print('Inicializando base de datos...')\n");
+        pythonCode.append("    init_db()\n");
+        pythonCode.append("    print('\\nServidor iniciado en: http://localhost:5000')\n");
+        pythonCode.append("    print('Presiona Ctrl+C para detener\\n')\n");
+        pythonCode.append("    app.run(debug=True, host='0.0.0.0', port=5000)\n");
+    }
+    
+    // Método para guardar archivos
+    public void guardarArchivos(String baseFileName) {
+        try {
+            // Guardar HTML
+            FileWriter htmlFile = new FileWriter(baseFileName + ".html");
+            htmlFile.write(html.toString());
+            htmlFile.close();
+            
+            // Guardar CSS
+            FileWriter cssFile = new FileWriter(baseFileName + ".css");
+            cssFile.write(css.toString());
+            cssFile.close();
+            
+            // Guardar especificación CRUD
+            if (crudSpec.length() > 0) {
+                FileWriter crudFile = new FileWriter(baseFileName + "_crud.txt");
+                crudFile.write(crudSpec.toString());
+                crudFile.close();
+            }
+            
+            // Guardar código Python
+            if (pythonCode.length() > 0) {
+                FileWriter pythonFile = new FileWriter("server.py");
+                pythonFile.write(pythonCode.toString());
+                pythonFile.close();
+            }
+            
+            System.out.println("Archivos generados exitosamente:");
+            System.out.println("- " + baseFileName + ".html");
+            System.out.println("- " + baseFileName + ".css");
+            if (crudSpec.length() > 0) {
+                System.out.println("- " + baseFileName + "_crud.txt");
+            }
+            if (pythonCode.length() > 0) {
+                System.out.println("- server.py (Servidor Python con API REST)");
+            }
+        } catch (IOException e) {
+            System.err.println("Error al guardar archivos: " + e.getMessage());
+        }
+    }
+    
+    // Método para inicializar CSS base
+    private void inicializarCSS() {
+        css.append("/* CSS Generado Automáticamente */\n\n");
+        css.append("* {\n");
+        css.append("    margin: 0;\n");
+        css.append("    padding: 0;\n");
+        css.append("    box-sizing: border-box;\n");
+        css.append("}\n\n");
+        css.append("body {\n");
+        css.append("    font-family: Arial, sans-serif;\n");
+        css.append("    line-height: 1.6;\n");
+        css.append("    background-color: #f4f4f4;\n");
+        css.append("    padding: 20px;\n");
+        css.append("}\n\n");
+        css.append(".container {\n");
+        css.append("    max-width: 1200px;\n");
+        css.append("    margin: 0 auto;\n");
+        css.append("    background: white;\n");
+        css.append("    padding: 20px;\n");
+        css.append("    box-shadow: 0 0 10px rgba(0,0,0,0.1);\n");
+        css.append("}\n\n");
+        css.append("hr {\n");
+        css.append("    border: none;\n");
+        css.append("    border-top: 2px solid #333;\n");
+        css.append("    margin: 20px 0;\n");
+        css.append("}\n\n");
+        css.append("h1 {\n");
+        css.append("    color: #333;\n");
+        css.append("    text-align: center;\n");
+        css.append("    margin: 20px 0;\n");
+        css.append("}\n\n");
+        css.append(".menu {\n");
+        css.append("    background: #333;\n");
+        css.append("    padding: 10px;\n");
+        css.append("    margin: 20px 0;\n");
+        css.append("}\n\n");
+        css.append(".menu ul {\n");
+        css.append("    list-style: none;\n");
+        css.append("    display: flex;\n");
+        css.append("    justify-content: center;\n");
+        css.append("}\n\n");
+        css.append(".menu li {\n");
+        css.append("    margin: 0 15px;\n");
+        css.append("}\n\n");
+        css.append(".menu a {\n");
+        css.append("    color: white;\n");
+        css.append("    text-decoration: none;\n");
+        css.append("    padding: 5px 10px;\n");
+        css.append("}\n\n");
+        css.append(".menu a:hover {\n");
+        css.append("    background: #555;\n");
+        css.append("}\n\n");
+        css.append(".imagenes {\n");
+        css.append("    display: flex;\n");
+        css.append("    justify-content: center;\n");
+        css.append("    gap: 20px;\n");
+        css.append("    margin: 20px 0;\n");
+        css.append("    flex-wrap: wrap;\n");
+        css.append("}\n\n");
+        css.append(".imagenes img {\n");
+        css.append("    max-width: 300px;\n");
+        css.append("    height: auto;\n");
+        css.append("    border-radius: 5px;\n");
+        css.append("    box-shadow: 0 2px 5px rgba(0,0,0,0.2);\n");
+        css.append("}\n\n");
+        css.append(".texto {\n");
+        css.append("    margin: 20px 0;\n");
+        css.append("    padding: 15px;\n");
+        css.append("    background: #f9f9f9;\n");
+        css.append("    border-left: 4px solid #333;\n");
+        css.append("}\n\n");
+        css.append(".crud-section {\n");
+        css.append("    margin: 30px 0;\n");
+        css.append("    padding: 20px;\n");
+        css.append("    border: 2px solid #ddd;\n");
+        css.append("    border-radius: 5px;\n");
+        css.append("}\n\n");
+        css.append(".crud-container {\n");
+        css.append("    margin: 20px 0;\n");
+        css.append("}\n\n");
+        css.append(".crud-buttons {\n");
+        css.append("    display: flex;\n");
+        css.append("    gap: 10px;\n");
+        css.append("    margin-bottom: 20px;\n");
+        css.append("}\n\n");
+        css.append(".btn {\n");
+        css.append("    padding: 10px 20px;\n");
+        css.append("    border: none;\n");
+        css.append("    border-radius: 5px;\n");
+        css.append("    cursor: pointer;\n");
+        css.append("    font-size: 14px;\n");
+        css.append("    font-weight: bold;\n");
+        css.append("    transition: all 0.3s;\n");
+        css.append("}\n\n");
+        css.append(".btn-crear {\n");
+        css.append("    background: #27ae60;\n");
+        css.append("    color: white;\n");
+        css.append("}\n\n");
+        css.append(".btn-crear:hover {\n");
+        css.append("    background: #229954;\n");
+        css.append("}\n\n");
+        css.append(".btn-refrescar {\n");
+        css.append("    background: #3498db;\n");
+        css.append("    color: white;\n");
+        css.append("}\n\n");
+        css.append(".btn-refrescar:hover {\n");
+        css.append("    background: #2980b9;\n");
+        css.append("}\n\n");
+        css.append(".btn-guardar {\n");
+        css.append("    background: #27ae60;\n");
+        css.append("    color: white;\n");
+        css.append("}\n\n");
+        css.append(".btn-cancelar {\n");
+        css.append("    background: #e74c3c;\n");
+        css.append("    color: white;\n");
+        css.append("}\n\n");
+        css.append(".formulario-crud {\n");
+        css.append("    background: #f9f9f9;\n");
+        css.append("    padding: 20px;\n");
+        css.append("    border-radius: 5px;\n");
+        css.append("    margin-bottom: 20px;\n");
+        css.append("    box-shadow: 0 2px 5px rgba(0,0,0,0.1);\n");
+        css.append("}\n\n");
+        css.append(".form-group {\n");
+        css.append("    margin-bottom: 15px;\n");
+        css.append("}\n\n");
+        css.append(".form-group label {\n");
+        css.append("    display: block;\n");
+        css.append("    margin-bottom: 5px;\n");
+        css.append("    font-weight: bold;\n");
+        css.append("}\n\n");
+        css.append(".form-group input {\n");
+        css.append("    width: 100%;\n");
+        css.append("    padding: 8px;\n");
+        css.append("    border: 1px solid #ddd;\n");
+        css.append("    border-radius: 4px;\n");
+        css.append("    font-size: 14px;\n");
+        css.append("}\n\n");
+        css.append(".form-actions {\n");
+        css.append("    display: flex;\n");
+        css.append("    gap: 10px;\n");
+        css.append("    margin-top: 20px;\n");
+        css.append("}\n\n");
+        css.append(".tabla-crud {\n");
+        css.append("    width: 100%;\n");
+        css.append("    border-collapse: collapse;\n");
+        css.append("    background: white;\n");
+        css.append("}\n\n");
+        css.append(".tabla-crud th,\n");
+        css.append(".tabla-crud td {\n");
+        css.append("    padding: 12px;\n");
+        css.append("    text-align: left;\n");
+        css.append("    border-bottom: 1px solid #ddd;\n");
+        css.append("}\n\n");
+        css.append(".tabla-crud th {\n");
+        css.append("    background: #34495e;\n");
+        css.append("    color: white;\n");
+        css.append("    font-weight: bold;\n");
+        css.append("}\n\n");
+        css.append(".tabla-crud tr:hover {\n");
+        css.append("    background: #f5f5f5;\n");
+        css.append("}\n\n");
+        css.append(".btn-editar,\n");
+        css.append(".btn-eliminar {\n");
+        css.append("    padding: 5px 10px;\n");
+        css.append("    border: none;\n");
+        css.append("    border-radius: 3px;\n");
+        css.append("    cursor: pointer;\n");
+        css.append("    font-size: 12px;\n");
+        css.append("    margin-right: 5px;\n");
+        css.append("}\n\n");
+        css.append(".btn-editar {\n");
+        css.append("    background: #f39c12;\n");
+        css.append("    color: white;\n");
+        css.append("}\n\n");
+        css.append(".btn-editar:hover {\n");
+        css.append("    background: #e67e22;\n");
+        css.append("}\n\n");
+        css.append(".btn-eliminar {\n");
+        css.append("    background: #e74c3c;\n");
+        css.append("    color: white;\n");
+        css.append("}\n\n");
+        css.append(".btn-eliminar:hover {\n");
+        css.append("    background: #c0392b;\n");
+        css.append("}\n\n");
+        css.append(".acercade {\n");
+        css.append("    margin-top: 40px;\n");
+        css.append("    padding: 20px;\n");
+        css.append("    background: #e9e9e9;\n");
+        css.append("    border-radius: 5px;\n");
+        css.append("}\n\n");
+        css.append(".acercade p {\n");
+        css.append("    margin: 10px 0;\n");
+        css.append("}\n\n");
+    }
+}
+
+// Regla principal
+pagina
+    :   'Inicio' 'pagina' 
+        { 
+            html.append("<!DOCTYPE html>\n");
+            html.append("<html lang=\"es\">\n");
+            html.append("<head>\n");
+            html.append("    <meta charset=\"UTF-8\">\n");
+            html.append("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
+            html.append("    <title>Página Generada</title>\n");
+            html.append("    <link rel=\"stylesheet\" href=\"pagina.css\">\n");
+            html.append("</head>\n");
+            html.append("<body>\n");
+            html.append("    <div class=\"container\">\n");
+            inicializarCSS();
+        }
+        (elemento)+
+        'fin' 'pagina'
+        {
+            html.append("    </div>\n");
+            html.append("</body>\n");
+            html.append("</html>\n");
+        }
+    ;
+
+elemento
+    :   linea
+    |   titulo
+    |   menu
+    |   seccionImagenes
+    |   texto
+    |   crud
+    |   seccionAcercaDe
+    ;
+
+linea
+    :   'linea' 'simple'
+        {
+            html.append("        <hr>\n");
+        }
+    |   'linea' 'doble'
+        {
+            html.append("        <hr style=\"border-top: 4px double #333;\">\n");
+        }
+    ;
+
+titulo
+    :   'titulo' STRING
+        {
+            String tituloTexto = $STRING.text;
+            tituloTexto = tituloTexto.substring(1, tituloTexto.length()-1); // Quitar comillas
+            tituloActual = tituloTexto;
+            html.append("        <h1>" + tituloTexto + "</h1>\n");
+        }
+    ;
+
+menu
+    :   'menu' 'opciones' 
+        {
+            html.append("        <nav class=\"menu\">\n");
+            html.append("            <ul>\n");
+            html.append("                <li><a href=\"#inicio\">Inicio</a></li>\n");
+            html.append("                <li><a href=\"#productos\">Productos</a></li>\n");
+            html.append("                <li><a href=\"#servicios\">Servicios</a></li>\n");
+            html.append("                <li><a href=\"#contacto\">Contacto</a></li>\n");
+            html.append("            </ul>\n");
+            html.append("        </nav>\n");
+        }
+    ;
+
+seccionImagenes
+    :   'seccion' 'imagenes' 
+        {
+            html.append("        <div class=\"imagenes\">\n");
+        }
+        (imagen)+
+        {
+            html.append("        </div>\n");
+        }
+    ;
+
+imagen
+    :   ID
+        {
+            String nombreImg = $ID.text;
+            html.append("            <img src=\"" + nombreImg + "\" alt=\"Imagen\">\n");
+        }
+    ;
+
+texto
+    :   'texto' STRING
+        {
+            String textoContenido = $STRING.text;
+            textoContenido = textoContenido.substring(1, textoContenido.length()-1);
+            html.append("        <div class=\"texto\">\n");
+            html.append("            <p>" + textoContenido + "</p>\n");
+            html.append("        </div>\n");
+        }
+    ;
+
+crud
+    :   'crud' 'inicio'
+        {
+            html.append("        <div class=\"crud-section\" id=\"crud-section\">\n");
+            html.append("            <h2>Gestión de Base de Datos</h2>\n");
+            campos.clear();
+            
+            // Iniciar generación de código Python
+            generarPythonServer();
+        }
+        bdd
+        (tabla)+
+        'crud' 'fin'
+        {
+            // Generar interfaz HTML completa con CRUD
+            generarInterfazCRUD();
+            html.append("        </div>\n");
+            
+            // Agregar scripts JavaScript al final del HTML
+            agregarScriptsJS();
+            
+            // Completar generación del servidor Python
+            finalizarPythonServer();
+            
+            // Generar especificación CRUD
+            crudSpec.append("=== ESPECIFICACIÓN CRUD ===\n\n");
+            crudSpec.append("Base de Datos: " + currentDatabase + "\n");
+            crudSpec.append("Tabla: " + currentTable + "\n");
+            crudSpec.append("Campos:\n");
+            for (String campo : campos) {
+                crudSpec.append("  - " + campo + "\n");
+            }
+            crudSpec.append("\n");
+            crudSpec.append("Operaciones implementadas:\n");
+            crudSpec.append("  ✓ CREATE (Insertar registros)\n");
+            crudSpec.append("  ✓ READ (Consultar registros)\n");
+            crudSpec.append("  ✓ UPDATE (Actualizar registros)\n");
+            crudSpec.append("  ✓ DELETE (Eliminar registros)\n");
+            crudSpec.append("\nServidor Python: http://localhost:5000\n");
+            crudSpec.append("Base de datos SQLite: " + currentDatabase + ".db\n");
+        }
+    ;
+
+bdd
+    :   'bdd' ID
+        {
+            currentDatabase = $ID.text;
+            html.append("            <p><strong>Base de Datos:</strong> " + currentDatabase + "</p>\n");
+        }
+    ;
+
+tabla
+    :   'tabla' ID
+        {
+            currentTable = $ID.text;
+            html.append("            <p><strong>Tabla:</strong> " + currentTable + "</p>\n");
+            html.append("            <p><strong>Campos:</strong></p>\n");
+            html.append("            <ul>\n");
+        }
+        (campo)+
+        'fintabla'
+        {
+            html.append("            </ul>\n");
+        }
+    ;
+
+campo
+    :   'campo' ID
+        {
+            String nombreCampo = $ID.text;
+            campos.add(nombreCampo);
+            html.append("                <li>" + nombreCampo + "</li>\n");
+        }
+    ;
+
+seccionAcercaDe
+    :   'seccion' 'acercade'
+        {
+            html.append("        <div class=\"acercade\">\n");
+            html.append("            <h2>Acerca de</h2>\n");
+        }
+        (infoAcercaDe)+
+        {
+            html.append("        </div>\n");
+        }
+    ;
+
+infoAcercaDe
+    :   'domicilio' ':' STRING
+        {
+            String domicilio = $STRING.text;
+            domicilio = domicilio.substring(1, domicilio.length()-1);
+            html.append("            <p><strong>Domicilio:</strong> " + domicilio + "</p>\n");
+        }
+    |   'telefono' ':' STRING
+        {
+            String telefono = $STRING.text;
+            telefono = telefono.substring(1, telefono.length()-1);
+            html.append("            <p><strong>Teléfono:</strong> " + telefono + "</p>\n");
+        }
+    |   'email' ':' STRING
+        {
+            String email = $STRING.text;
+            email = email.substring(1, email.length()-1);
+            html.append("            <p><strong>Email:</strong> " + email + "</p>\n");
+        }
+    ;
+
+// TOKENS (ANTLR 3 syntax)
+STRING  :   '"' ( ~('"'|'\r'|'\n') )* '"' ;
+ID      :   ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'.')* ;
+WS      :   (' '|'\t'|'\r'|'\n')+ { $channel = HIDDEN; } ;
+COMMENT :   '//' (~('\r'|'\n'))* { $channel = HIDDEN; } ;

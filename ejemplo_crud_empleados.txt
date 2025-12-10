@@ -1,0 +1,32 @@
+Inicio pagina
+
+titulo "👥 Sistema de Gestión de Empleados"
+
+menu opciones
+
+linea simple
+
+crud inicio
+    bdd EmpresaDB
+    tabla Empleados
+        campo id:INT
+        campo nombre:VARCHAR
+        campo puesto:VARCHAR
+        campo departamento:VARCHAR
+        campo salario:DECIMAL
+        campo fecha_contratacion:DATE
+        campo telefono:VARCHAR
+        campo correo:VARCHAR
+    fintabla
+crud fin
+
+linea doble
+
+texto "<div style='background:#3498db;color:white;padding:20px;border-radius:10px;margin:20px 0'><h3 style='color:white'>📊 Panel de Recursos Humanos</h3><p>Administra la información de tu equipo de trabajo de manera profesional y segura.</p></div>"
+
+seccion acercade
+    domicilio:"Torre Empresarial, Piso 5, Morelia, Mich."
+    telefono:"443-987-6543"
+    email:"rh@empresa.com"
+
+fin pagina

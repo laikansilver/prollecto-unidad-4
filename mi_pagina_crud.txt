@@ -1,0 +1,14 @@
+=== ESPECIFICACIÓN CRUD ===
+
+Base de Datos: mi_base_datos
+Tabla: Usuarios
+Campos:
+  - nombre
+  - apellido
+  - correo
+
+Operaciones requeridas:
+  - CREATE (Insertar)
+  - READ (Consultar)
+  - UPDATE (Actualizar)
+  - DELETE (Eliminar)

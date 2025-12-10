@@ -1,0 +1,26 @@
+Inicio pagina
+
+titulo "🛒 Sistema de Productos"
+
+texto "Gestión de inventario de productos"
+
+linea simple
+
+crud inicio
+    bdd InventarioDB
+    tabla Productos
+        campo id:INT
+        campo nombre:VARCHAR
+        campo precio:DECIMAL
+        campo stock:INT
+    fintabla
+crud fin
+
+linea simple
+
+seccion acercade
+    domicilio:"Tienda Example"
+    telefono:"443-123-4567"
+    email:"ventas@example.com"
+
+fin pagina

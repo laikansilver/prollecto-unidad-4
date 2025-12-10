@@ -1,0 +1,17 @@
+=== ESPECIFICACIÓN CRUD ===
+
+Base de Datos: sistema_escolar
+Tabla: Profesores
+Campos:
+  - id_profesor
+  - nombre_completo
+  - especialidad
+  - departamento
+  - antiguedad
+  - extension
+
+Operaciones requeridas:
+  - CREATE (Insertar)
+  - READ (Consultar)
+  - UPDATE (Actualizar)
+  - DELETE (Eliminar)

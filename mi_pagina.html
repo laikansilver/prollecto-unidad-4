@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Generada</title>
+    <link rel="stylesheet" href="pagina.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Mi Sistema Web Completo</h1>
+        <hr>
+        <div class="texto">
+            <p>Bienvenido a mi pagina web con todas las funcionalidades</p>
+        </div>
+        <nav class="menu">
+            <ul>
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#productos">Productos</a></li>
+                <li><a href="#servicios">Servicios</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+            </ul>
+        </nav>
+        <hr style="border-top: 4px double #333;">
+        <div class="texto">
+            <p>Enlaces a sitios importantes:</p>
+        </div>
+        <div class="texto">
+            <p><p style='padding:15px;background:#e8f4f8;margin:10px 0'><strong>Google:</strong> <a href='https://www.google.com' target='_blank'>Ir a Google</a></p></p>
+        </div>
+        <div class="texto">
+            <p><p style='padding:15px;background:#e8f4f8;margin:10px 0'><strong>YouTube:</strong> <a href='https://www.youtube.com' target='_blank'>Ir a YouTube</a></p></p>
+        </div>
+        <hr>
+        <div class="texto">
+            <p>Secciones con colores:</p>
+        </div>
+        <div class="texto">
+            <p><div style='padding:20px;background:#2ecc71;color:white;margin:10px 0'><h3 style='color:white'>Verde - Informacion Positiva</h3></div></p>
+        </div>
+        <div class="texto">
+            <p><div style='padding:20px;background:#e74c3c;color:white;margin:10px 0'><h3 style='color:white'>Rojo - Alerta Importante</h3></div></p>
+        </div>
+        <div class="texto">
+            <p><div style='padding:20px;background:#3498db;color:white;margin:10px 0'><h3 style='color:white'>Azul - Informacion General</h3></div></p>
+        </div>
+        <hr>
+        <div class="texto">
+            <p>Mis imagenes:</p>
+        </div>
+        <div class="imagenes">
+            <img src="Bullitt.jpg" alt="Imagen">
+            <img src="eleonor.jpg" alt="Imagen">
+            <img src="super_snake.jpg" alt="Imagen">
+        </div>
+        <hr>
+        <div class="texto">
+            <p>Tabla para registrar datos:</p>
+        </div>
+        <div class="texto">
+            <p><style>.mitabla{padding:20px;border:2px solid #3498db;margin:20px 0}.mitabla table{width:100%;border-collapse:collapse}.mitabla th{background:#3498db;color:white;padding:10px}.mitabla td{padding:10px;border:1px solid #ddd}.mitabla input{padding:8px;margin:5px}.mitabla button{padding:8px 15px;margin:5px;background:#3498db;color:white;border:none;cursor:pointer}.btn-eliminar{background:#e74c3c}</style></p>
+        </div>
+        <div class="texto">
+            <p><div class='mitabla'><h3>Agregar Persona</h3><input id='nom' placeholder='Nombre'><input id='edad' placeholder='Edad'><button onclick='agregar()'>Agregar</button><table><tr><th>Nombre</th><th>Edad</th><th>Acciones</th></tr><tbody id='datos'></tbody></table></div></p>
+        </div>
+        <div class="texto">
+            <p><script>let personas=[];</script></p>
+        </div>
+        <div class="texto">
+            <p><script>function agregar(){let p={nombre:document.getElementById('nom').value,edad:document.getElementById('edad').value};personas.push(p);document.getElementById('nom').value='';document.getElementById('edad').value='';mostrar()}</script></p>
+        </div>
+        <div class="texto">
+            <p><script>function mostrar(){let tabla=document.getElementById('datos');tabla.innerHTML='';for(let i=0;i<personas.length;i++){let tr=document.createElement('tr');let td1=document.createElement('td');td1.textContent=personas[i].nombre;tr.appendChild(td1);let td2=document.createElement('td');td2.textContent=personas[i].edad;tr.appendChild(td2);let td3=document.createElement('td');let btn=document.createElement('button');btn.className='btn-eliminar';btn.textContent='Eliminar';btn.onclick=function(){eliminar(i)};td3.appendChild(btn);tr.appendChild(td3);tabla.appendChild(tr)}}</script></p>
+        </div>
+        <div class="texto">
+            <p><script>function eliminar(i){personas.splice(i,1);mostrar()}</script></p>
+        </div>
+        <hr>
+        <div class="crud-section">
+            <h2>Sección CRUD</h2>
+            <p><em>Esta sección será implementada con PHP en la Unidad 4</em></p>
+            <p><strong>Base de Datos:</strong> mi_base_datos</p>
+            <p><strong>Tabla:</strong> Usuarios</p>
+            <p><strong>Campos:</strong></p>
+            <ul>
+                <li>nombre</li>
+                <li>apellido</li>
+                <li>correo</li>
+            </ul>
+        </div>
+        <hr>
+        <div class="acercade">
+            <h2>Acerca de</h2>
+            <p><strong>Domicilio:</strong> Mi Direccion 123</p>
+            <p><strong>Teléfono:</strong> 555-1234</p>
+            <p><strong>Email:</strong> contacto@ejemplo.com</p>
+        </div>
+        <hr>
+        <div class="texto">
+            <p>Gracias por visitar mi pagina</p>
+        </div>
+    </div>
+</body>
+</html>
